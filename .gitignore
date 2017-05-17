@@ -1,0 +1,5 @@
+.vs/
+CryptoTestTool/CryptoTestTool/packages/
+packages/
+*.refresh
+*.bin
