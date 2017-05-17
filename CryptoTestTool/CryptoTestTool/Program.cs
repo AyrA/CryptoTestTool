@@ -13,6 +13,9 @@ namespace CryptoTestTool
             //Ensure we are in the correct directory
             DI = new DirectoryInfo(Environment.CurrentDirectory = (new FileInfo(Process.GetCurrentProcess().MainModule.FileName)).Directory.FullName);
 
+            ShowDisclaimer();
+            WaitForKey();
+
             if (!File.Exists("Newtonsoft.Json.dll"))
             {
                 SC((int)ConsoleColor.Red);
@@ -93,6 +96,28 @@ unencrypted temporary key from memory as part of this demo.");
             return 0;
         }
 
+        /// <summary>
+        /// Shows the disclaimer.
+        /// </summary>
+        private static void ShowDisclaimer()
+        {
+            Console.Error.WriteLine(@"
+THIS SOFTWARE IS PROVIDED 'AS IS' AND ANY EXPRESSED OR IMPLIED WARRANTIES,
+INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND
+FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE REGENTS
+OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
+EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
+PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR
+BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER
+IN CONTRACT, STRICT LIABILITY, OR TORT(INCLUDING NEGLIGENCE OR OTHERWISE)
+ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+POSSIBILITY OF SUCH DAMAGE.");
+        }
+
+        /// <summary>
+        /// Decrypts the first encrypted file again as a proof of concept
+        /// </summary>
+        /// <param name="C">Crypto engine</param>
         private static void DecryptFirstFile(Cryptic C)
         {
             Console.Clear();
@@ -114,6 +139,10 @@ The encrypted file was deleted already.");
             RC();
         }
 
+        /// <summary>
+        /// Encrypts the files generated
+        /// </summary>
+        /// <param name="C">Crypto engine</param>
         private static void EncryptFiles(Cryptic C)
         {
             Console.Clear();
@@ -139,15 +168,21 @@ The encrypted file was deleted already.");
             RC();
         }
 
+        /// <summary>
+        /// Creates an encryption key and ensures we can't access the decryption key
+        /// </summary>
+        /// <returns>Crypto engine</returns>
         private static Cryptic CreateEncryptKey()
         {
             Console.Clear();
             Console.Error.Write("Create new encryption key...");
             Cryptic C = new Cryptic();
             C.CreateKey();
+            //Export public as-is. You can't decrypt with this
             File.WriteAllBytes("public.bin", C.ExportKey(false));
             Cryptic Temp = new Cryptic();
             Temp.ImportKey(File.ReadAllBytes("master.bin"));
+            //Export the private key encrypted. You can't decrypt with this either because the key itself is encrypted.
             File.WriteAllBytes("private.bin", Temp.Crypt(C.ExportKey(true)));
             SC((int)ConsoleColor.Green);
             Console.Error.WriteLine("[DONE]");
@@ -155,6 +190,10 @@ The encrypted file was deleted already.");
             return C;
         }
 
+        /// <summary>
+        /// Downloads the master key.
+        /// You can replace the content of this method with a hardcoded key if you want to.
+        /// </summary>
         private static void ObtainMasterKey()
         {
             Console.Clear();
@@ -190,6 +229,11 @@ Details: {0}", ex.Message);
             RC();
         }
 
+        /// <summary>
+        /// Creates text files with random content
+        /// </summary>
+        /// <param name="Count">Number of files</param>
+        /// <param name="Size">Size of files (in bytes)</param>
         private static void CreateTextFiles(int Count = 5, int Size = 5000)
         {
             const string ALPHA = "abcd efgh ijkl mnop qrst uvwx yz";
@@ -219,6 +263,11 @@ Details: {0}", ex.Message);
 They only contain randomly generated nonsense.");
         }
 
+        /// <summary>
+        /// Set console color
+        /// </summary>
+        /// <param name="FGC">Font color</param>
+        /// <param name="BGC">Background color</param>
         private static void SC(int FGC = -1, int BGC = -1)
         {
             if (Enum.IsDefined(typeof(ConsoleColor), FGC))
@@ -231,8 +280,15 @@ They only contain randomly generated nonsense.");
             }
         }
 
+        /// <summary>
+        /// Resets console color
+        /// </summary>
         private static void RC() => Console.ResetColor();
 
+        /// <summary>
+        /// Empties the keyboard buffer and waits for a key press
+        /// </summary>
+        /// <param name="ShowMessage">True to show a message to press a key</param>
         private static void WaitForKey(bool ShowMessage = true)
         {
             if (ShowMessage)
